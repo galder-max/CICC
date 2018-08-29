@@ -14,9 +14,9 @@ options(formatR.arrow=TRUE,width=90)
 ```
 
 \maketitle
-# Description {#description .unnumbered .unnumbered}
+# Description 
 
-## Consensus cluster assignment {#consensus-cluster-assignment .unnumbered .unnumbered}
+## Consensus cluster assignment 
 
 Let us use m methods $M_{1,\dotsc, m}$ to cluster v single nucleotide
 variants $V_{1,\dotsc, v}$.\
@@ -44,7 +44,7 @@ consensus clusters as input.\
 Finally, given $\vec{UVAs_c}$ in each consensus cluster c, mutations
 $V_i$ for which $\vec{VA}(V_i)\in \vec{UVAs_c}$ are assigned to $c$.\
 
-## Optimal K {#optimal-k .unnumbered .unnumbered}
+## Optimal K 
 
 To obtain the optimal number of clusters K, we derive consensus matrices
 for $K\in[2,max(K_{methods})]$. If a majority of methods have K=1, we
@@ -55,7 +55,7 @@ K value, corresponding to the proportion of times the mutations were
 clustered together. We take optimal K as the K yielding the matrix with
 minimal PAC [@senbabaoglu_critical_2014].\
 
-## Consensus CCF {#consensus-ccf .unnumbered .unnumbered}
+## Consensus CCF 
 
 The CCFs of each consensus cluster can then be calculated by summarising
 the CCFs of individual mutations assigned to that cluster. We take the
@@ -66,7 +66,7 @@ rescale CCF of each method using the consensus purity
 ($CCF_{rescaled}=\frac{purity_{method}}{purity_{consensus}}CCF_{method}$)
 and take the median across methods.\
 
-# Example {#example .unnumbered .unnumbered}
+# Example
 
 Let's generate simple dummy data for illustration purposes.
 
@@ -393,7 +393,7 @@ finalClusts <- findClusts(ccm$ccm[[ccm$K$optK]],ccm$K$optK)
 table(finalClusts)
 ```
 
-# Conclusion {#conclusion .unnumbered .unnumbered}
+# Conclusion 
 
 This method takes the cluster assignments (=cluster IDs) and CCF of all
 mutations for each method and returns the consensus cluster assignments,
