@@ -1,0 +1,616 @@
+%% comment line1
+%% comment line2
+\documentclass{article}\usepackage[]{graphicx}\usepackage[]{color}
+%% maxwidth is the original width if it is less than linewidth
+%% otherwise use linewidth (to make sure the graphics do not exceed the margin)
+\makeatletter
+\def\maxwidth{ %
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi
+}
+\makeatother
+
+\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
+\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
+\newcommand{\hlstr}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
+\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
+\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hlstd}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
+\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
+\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
+\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
+\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
+
+\usepackage{framed}
+\makeatletter
+\newenvironment{kframe}{%
+ \def\at@end@of@kframe{}%
+ \ifinner\ifhmode%
+  \def\at@end@of@kframe{\end{minipage}}%
+  \begin{minipage}{\columnwidth}%
+ \fi\fi%
+ \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
+ \colorbox{shadecolor}{##1}\hskip-\fboxsep
+     % There is no \\@totalrightmargin, so:
+     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
+ \MakeFramed {\advance\hsize-\width
+   \@totalleftmargin\z@ \linewidth\hsize
+   \@setminipage}}%
+ {\par\unskip\endMakeFramed%
+ \at@end@of@kframe}
+\makeatother
+
+\definecolor{shadecolor}{rgb}{.97, .97, .97}
+\definecolor{messagecolor}{rgb}{0, 0, 0}
+\definecolor{warningcolor}{rgb}{1, 0, 1}
+\definecolor{errorcolor}{rgb}{1, 0, 0}
+\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
+
+\usepackage{alltt}
+\usepackage{float}
+\usepackage[sc]{mathpazo}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{pdfpages}
+\usepackage{amsmath}
+\geometry{verbose,tmargin=2.5cm,bmargin=2.5cm,lmargin=2.5cm,rmargin=2.5cm}
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
+\usepackage{url}
+\usepackage[unicode=true,pdfusetitle,
+ bookmarks=true,bookmarksnumbered=true,bookmarksopen=true,bookmarksopenlevel=2,
+ breaklinks=false,pdfborder={0 0 1},backref=false,colorlinks=false]
+ {hyperref}
+\usepackage[nottoc]{tocbibind}
+\hypersetup{
+ pdfstartview={XYZ null null 1}}
+\usepackage{breakurl}
+\renewcommand*\contentsname{Outline}
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\begin{document}
+
+
+\title{ClusterID-based consensus clustering}
+
+\author{Maxime Tarabichi}
+\maketitle
+
+\section*{Description}
+\subsection*{Consensus cluster assignment}
+Let us use m methods \(M_{1,\dotsc, m}\) to cluster v single
+nucleotide variants
+\(V_{1,\dotsc, v}\). \\
+Each method \(M_i\) assigns to each variant \(V_j\) one
+cluster ID \[A(M_i,V_j)\]\\
+For each variant \(V_j\), we write the vector of
+assignment\\
+\[\vec{VA}(V_j)=[A(M_1,V_j), A(M_2, V_j), \dotsc, A(M_m, V_j)]\] \\ \\
+Two mutations \(V_a\) and \(V_b\) sharing vector of assignments, i.e
+\(\vec{VA}(V_a)=\vec{VA}(V_b)\), have been assigned to the same cluster within all
+methods. \\
+Across all mutations, there will be \(u\) unique vectors
+of assignment \(\vec{UVA}_{1\dotsc u}\), shared by \(N_{1\dotsc u}\) number of
+mutations, respectively. \\
+For each unique vector of assignment \(\vec{UVA}_k\), we
+compute a distance \(d_{kl}\) to all \(\vec{UVA}_l\).
+That distance is defined as a the sum of two distances
+\[d_{kl}=d1(k,l)+d2(k,l)\]with:\\
+\[d1(k,l)=Cmax(N_{1\dotsc u})sum{(\vec{UVA}_k!=\vec{UVA}_l)}\]
+\[d2(k,l)=-max(N_k,N_l)\]
+C is set to 10 and ensures that d1=method assignment prevails over
+d2=number of mutations in a cluster.
+Next we perform hierarchical clustering on the distance matrix
+\(D_{uxu}=d_{kl}\) using Ward's criterion and cut the tree to
+get a desired number of clusters of \(\vec{UVA}\). This method thus takes
+the final number of consensus clusters as input.\\
+Finally,  given \(\vec{UVAs_c}\) in each consensus cluster c,
+mutations \(V_i\) for which \(\vec{VA}(V_i)\in \vec{UVAs_c}\) are
+assigned to \(c\). \\
+\subsection*{Optimal K}
+To obtain the optimal number of clusters K, we derive consensus matrices for
+\(K\in[2,max(K_{methods})]\). If a majority of methods have K=1,
+we set K=1. Otherwise for each values of K, we repeat the consensus
+clustering procedure 100 times, after independent sampling with
+replacement from the methods. We then obtain a consensus matrix for
+each K value, corresponding to the proportion of times the mutations were
+clustered together. We take optimal K as the K yielding the matrix with
+minimal PAC \cite{senbabaoglu_critical_2014}.\\
+\subsection*{Consensus CCF}
+The CCFs of each consensus cluster can then be calculated by
+summarising the CCFs of individual mutations assigned to that
+cluster. We take the weighted average of these CCFs with the weights
+of each mutation proportional to its number of aligned reads.\\
+This last step requires to compute a consensus CCF for each
+mutation. We rescale CCF of each method using the consensus purity
+(\(CCF_{rescaled}=\frac{purity_{method}}{purity_{consensus}}CCF_{method}\)) and
+  take the median across methods. \\
+
+
+\newpage
+\section*{Example}
+
+Let's generate simple dummy data for illustration purposes.
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{## #####################################}
+\hlcom{## generate data}
+\hlcom{## list with cluster assignments of each method}
+\hlstd{allA} \hlkwb{<-} \hlkwd{list}\hlstd{(}\hlkwc{method1}\hlstd{=}\hlkwd{c}\hlstd{(}\hlkwd{rep}\hlstd{(}\hlnum{1}\hlstd{,}\hlnum{1000}\hlstd{),}\hlkwd{rep}\hlstd{(}\hlnum{2}\hlstd{,}\hlnum{1000}\hlstd{)),}
+             \hlkwc{method2}\hlstd{=}\hlkwd{c}\hlstd{(}\hlkwd{rep}\hlstd{(}\hlnum{1}\hlstd{,}\hlnum{800}\hlstd{),}\hlkwd{rep}\hlstd{(}\hlnum{2}\hlstd{,}\hlnum{900}\hlstd{),} \hlkwd{rep}\hlstd{(}\hlnum{3}\hlstd{,}\hlnum{300}\hlstd{)),}
+             \hlkwc{method3}\hlstd{=}\hlkwd{c}\hlstd{(}\hlkwd{rep}\hlstd{(}\hlnum{1}\hlstd{,}\hlnum{800}\hlstd{),}\hlkwd{rep}\hlstd{(}\hlnum{2}\hlstd{,}\hlnum{600}\hlstd{),} \hlkwd{rep}\hlstd{(}\hlnum{3}\hlstd{,}\hlnum{600}\hlstd{)),}
+             \hlkwc{method4}\hlstd{=}\hlkwd{c}\hlstd{(}\hlkwd{rep}\hlstd{(}\hlnum{1}\hlstd{,}\hlnum{1200}\hlstd{),}\hlkwd{rep}\hlstd{(}\hlnum{2}\hlstd{,}\hlnum{600}\hlstd{),} \hlkwd{rep}\hlstd{(}\hlnum{3}\hlstd{,}\hlnum{200}\hlstd{)),}
+             \hlkwc{method5}\hlstd{=}\hlkwd{c}\hlstd{(}\hlkwd{rep}\hlstd{(}\hlnum{4}\hlstd{,}\hlnum{200}\hlstd{),}\hlkwd{rep}\hlstd{(}\hlnum{3}\hlstd{,}\hlnum{500}\hlstd{),} \hlkwd{rep}\hlstd{(}\hlnum{2}\hlstd{,}\hlnum{700}\hlstd{),}\hlkwd{rep}\hlstd{(}\hlnum{1}\hlstd{,}\hlnum{600}\hlstd{)),}
+             \hlkwc{method6}\hlstd{=}\hlkwd{c}\hlstd{(}\hlkwd{rep}\hlstd{(}\hlnum{4}\hlstd{,}\hlnum{600}\hlstd{),}\hlkwd{rep}\hlstd{(}\hlnum{3}\hlstd{,}\hlnum{800}\hlstd{),} \hlkwd{rep}\hlstd{(}\hlnum{2}\hlstd{,}\hlnum{400}\hlstd{),}\hlkwd{rep}\hlstd{(}\hlnum{1}\hlstd{,}\hlnum{200}\hlstd{))}
+             \hlstd{)}
+\hlstd{allA} \hlkwb{<-} \hlkwd{lapply}\hlstd{(allA,}\hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{}\hlkwd{names}\hlstd{(x)} \hlkwb{<-} \hlkwd{paste}\hlstd{(}\hlstr{"mutation"}\hlstd{,}\hlnum{1}\hlopt{:}\hlnum{2000}\hlstd{,}\hlkwc{sep}\hlstd{=}\hlstr{""}\hlstd{);}\hlkwd{return}\hlstd{(x);\})}
+\hlkwd{sapply}\hlstd{(allA,head)}
+\end{alltt}
+\begin{verbatim}
+##           method1 method2 method3 method4 method5 method6
+## mutation1       1       1       1       1       4       4
+## mutation2       1       1       1       1       4       4
+## mutation3       1       1       1       1       4       4
+## mutation4       1       1       1       1       4       4
+## mutation5       1       1       1       1       4       4
+## mutation6       1       1       1       1       4       4
+\end{verbatim}
+\begin{alltt}
+\hlcom{## simulate a dummy underlying ccf}
+\hlstd{cov} \hlkwb{<-} \hlkwd{rpois}\hlstd{(}\hlnum{700}\hlstd{,}\hlnum{70}\hlstd{)}
+\hlstd{cov2} \hlkwb{<-} \hlkwd{rpois}\hlstd{(}\hlnum{600}\hlstd{,}\hlnum{70}\hlstd{)}
+\hlstd{ccfs} \hlkwb{<-} \hlkwd{c}\hlstd{(}\hlkwd{sort}\hlstd{(}\hlkwd{rbinom}\hlstd{(}\hlnum{700}\hlstd{, cov,} \hlnum{.5}\hlstd{)}\hlopt{*}\hlnum{2}\hlopt{/}\hlkwd{sample}\hlstd{(cov),}\hlkwc{decreasing}\hlstd{=T),}
+          \hlkwd{sort}\hlstd{(}\hlkwd{rbinom}\hlstd{(}\hlnum{700}\hlstd{, cov,} \hlnum{.33}\hlstd{)}\hlopt{*}\hlnum{2}\hlopt{/}\hlstd{cov,}\hlkwc{decreasing}\hlstd{=T),}
+          \hlkwd{sort}\hlstd{(}\hlkwd{rbinom}\hlstd{(}\hlnum{600}\hlstd{, cov,} \hlnum{.1}\hlstd{)}\hlopt{*}\hlnum{2}\hlopt{/}\hlstd{cov2,}\hlkwc{decreasing}\hlstd{=T))}
+\hlcom{## #####################################}
+\hlcom{## plot ccfs}
+\hlkwd{hist}\hlstd{(ccfs,}\hlnum{100}\hlstd{)}
+\hlkwd{abline}\hlstd{(}\hlkwc{v}\hlstd{=}\hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,}\hlnum{.66}\hlstd{,}\hlnum{.2}\hlstd{),}\hlkwc{lwd}\hlstd{=}\hlnum{10}\hlstd{,}\hlkwc{col}\hlstd{=}\hlkwd{rgb}\hlstd{(}\hlnum{.5}\hlstd{,}\hlnum{0}\hlstd{,}\hlnum{0}\hlstd{,}\hlnum{.6}\hlstd{))}
+\hlcom{## #####################################}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=1.0\linewidth]{figure/minimal-generateData-1} 
+
+}
+
+
+
+\end{knitrout}
+
+This is a dummy -not necessarily realistic- example to illustrate how
+the methods would treat the typical input, i.e. a list of vectors of
+cluster assignments (=cluster IDs).
+We start with the cluster assignments from 6 methods for the same
+2,000 mutations. In this example, the truth has three clusters
+of 700, 700, and 600 mutations, resp. For illustration purposes, their
+cancer cell fractions (CCFs) are modelled as binomials around 100\%, 66\% and 20\% CCF,
+respectively. However, only the cluster assignments are actually used for
+consensus clustering.\\
+
+In this example the methods find 2, 3, 3, 3, 4 and 4 clusters resp., and each
+differ slightly in cluster assignments. Unlike the four first methods,
+the two last methods have assigned highest cluster ID to the lowest
+CCF cluster. Because the cluster-ID consensus clustering is not based
+on the CCF, this will have no impact on the final consensus clustering.\\
+
+The two first mutations are assigned to cluster1, cluster1, cluster1,
+cluster1, cluster4 and cluster4, resp. by each of the methods and therefore their
+vector of assignments is defined as: 1-1-1-1-4-4.
+The last mutation is assigned to cluster2, cluster3, cluster3, cluster3,
+cluster1, and cluster1, resp. by each of the methods and its vector of
+assignments is defined as: 2-3-3-3-1-1.\\
+
+The consensus clustering distance between the two first mutations is
+minimal (d=0) since they have been assigned to the same cluster by all methods.
+The consensus clustering distance between these the two first
+mutations and the last mutation is maximal (d=6), since all methods have
+assigned these two mutations to different clusters.\\
+
+This distance between mutations is used to cluster all mutations into an
+optimal number K of consensus clusters. K is chosen to minimise the
+Proportion of Ambiguous Clusters (PAC)
+\cite{senbabaoglu_critical_2014} of the consensus matrices
+corresponding to K.\\
+
+Let's first cluster mutations based on their distances for a
+given number of clusters K=4.\\
+
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{## similarity between two vectors of assignments}
+\hlstd{votedist} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{g1}\hlstd{,}\hlkwc{g2}\hlstd{)}
+\hlstd{\{}
+    \hlkwd{suppressWarnings}\hlstd{(}\hlkwa{if}\hlstd{(T)\{}
+    \hlstd{g1} \hlkwb{<-} \hlkwd{as.numeric}\hlstd{(}\hlkwd{strsplit}\hlstd{(g1,}\hlkwc{split}\hlstd{=}\hlstr{"-"}\hlstd{)[[}\hlnum{1}\hlstd{]])}
+    \hlstd{g2} \hlkwb{<-} \hlkwd{as.numeric}\hlstd{(}\hlkwd{strsplit}\hlstd{(g2,}\hlkwc{split}\hlstd{=}\hlstr{"-"}\hlstd{)[[}\hlnum{1}\hlstd{]])}
+    \hlkwd{return}\hlstd{(}\hlkwd{sum}\hlstd{(g1}\hlopt{==}\hlstd{g2,}\hlkwc{na.rm}\hlstd{=T))\})}
+\hlstd{\}}
+
+\hlcom{## distance matrix between pairs of unique vectors of assignments}
+\hlstd{votedist.matrix} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{allgs}\hlstd{,}\hlkwc{nMethods}\hlstd{)}
+\hlstd{\{}
+    \hlstd{m} \hlkwb{<-} \hlkwd{matrix}\hlstd{(}\hlnum{0}\hlstd{,}\hlkwd{length}\hlstd{(allgs),}\hlkwd{length}\hlstd{(allgs))}
+    \hlkwa{for}\hlstd{(i} \hlkwa{in} \hlnum{1}\hlopt{:}\hlstd{(}\hlkwd{length}\hlstd{(allgs)}\hlopt{-}\hlnum{1}\hlstd{))}
+        \hlkwa{for}\hlstd{(j} \hlkwa{in} \hlstd{(i}\hlopt{+}\hlnum{1}\hlstd{)}\hlopt{:}\hlkwd{length}\hlstd{(allgs))}
+        \hlstd{\{}
+            \hlstd{m[i,j]} \hlkwb{<-} \hlkwd{votedist}\hlstd{(allgs[i],allgs[j])}
+            \hlstd{m[j,i]} \hlkwb{<-} \hlkwd{votedist}\hlstd{(allgs[i],allgs[j])}
+        \hlstd{\}}
+    \hlkwd{rownames}\hlstd{(m)} \hlkwb{<-} \hlstd{allgs}
+    \hlkwd{colnames}\hlstd{(m)} \hlkwb{<-} \hlstd{allgs}
+    \hlstd{nMethods}\hlopt{-}\hlstd{m}
+\hlstd{\}}
+
+\hlcom{## fast cc using hclust, with method="ward linkage"}
+\hlstd{fastConsensusClustering} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{allA}\hlstd{,}
+                                    \hlkwc{nbClusters}\hlstd{,}
+                                    \hlkwc{keepnames}\hlstd{=}\hlkwa{NULL}\hlstd{)}
+\hlstd{\{}
+    \hlstd{nMut} \hlkwb{<-} \hlkwd{length}\hlstd{(allA[[}\hlnum{1}\hlstd{]])}
+    \hlstd{nMethods} \hlkwb{<-} \hlkwd{length}\hlstd{(allA)}
+    \hlstd{matA} \hlkwb{<-} \hlkwd{t}\hlstd{(}\hlkwd{sapply}\hlstd{(allA,}\hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) x))}
+    \hlstd{clsA} \hlkwb{<-} \hlkwa{NULL}
+    \hlkwa{for}\hlstd{(i} \hlkwa{in} \hlnum{1}\hlopt{:}\hlkwd{nrow}\hlstd{(matA))}
+        \hlstd{clsA} \hlkwb{<-} \hlkwd{paste}\hlstd{(clsA,matA[i,],}\hlkwc{sep}\hlstd{=}\hlkwa{if}\hlstd{(i}\hlopt{==}\hlnum{1}\hlstd{)} \hlstr{""} \hlkwa{else} \hlstr{"-"}\hlstd{)}
+    \hlkwd{head}\hlstd{(clsA)}
+    \hlstd{vuA} \hlkwb{<-} \hlkwd{sort}\hlstd{(}\hlkwd{table}\hlstd{(clsA),}\hlkwc{decreasing}\hlstd{=T)}
+    \hlkwd{head}\hlstd{(vuA)}
+    \hlstd{distF} \hlkwb{<-} \hlkwd{as.dist}\hlstd{(}\hlkwd{votedist.matrix}\hlstd{(}\hlkwd{names}\hlstd{(vuA),nMethods)}\hlopt{*}\hlkwd{max}\hlstd{(vuA)}\hlopt{*}\hlnum{10}\hlstd{)}
+    \hlstd{hc} \hlkwb{<-} \hlkwd{hclust}\hlstd{(distF,}\hlkwc{method}\hlstd{=}\hlstr{"ward.D"}\hlstd{)}
+    \hlstd{lClusts} \hlkwb{<-} \hlkwd{lapply}\hlstd{(nbClusters,}\hlkwa{function}\hlstd{(}\hlkwc{nC}\hlstd{)} \hlkwd{cutree}\hlstd{(hc,}\hlkwc{k}\hlstd{=nC))}
+    \hlkwd{return}\hlstd{(lClusts)}
+\hlstd{\}}
+\hlcom{## run and print results}
+\hlstd{lResultClusters} \hlkwb{<-} \hlkwd{fastConsensusClustering}\hlstd{(allA,}\hlkwc{nbClusters}\hlstd{=}\hlnum{4}\hlstd{)}
+\hlkwd{print}\hlstd{(lResultClusters)}
+\end{alltt}
+\begin{verbatim}
+## [[1]]
+## 1-1-1-1-3-4 2-2-3-2-1-2 1-1-1-1-4-4 1-2-2-1-2-3 2-2-2-1-2-3 2-2-2-2-2-3 2-3-3-3-1-1 
+##           1           2           1           3           3           3           4 
+## 1-1-1-1-2-3 1-1-1-1-3-3 2-3-3-2-1-2 
+##           1           1           2
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+We can see after printing the results that each mutation has been
+grouped together with all other mutations with the same vector of
+assignments.
+We are actually clustering unique vectors of assignments rather than
+individual mutations. This will prove very useful when clustering high
+number of mutations, as the time complexity of the method does not
+depend on the number of mutations but the number of vectors of assignments.\\
+
+The clusters assigned are not necessarily ordered with regards to the
+underlying CCFs (see example below).
+
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{## compute consensus ccfs}
+\hlstd{clsA} \hlkwb{<-} \hlkwa{NULL}
+\hlkwa{for}\hlstd{(i} \hlkwa{in} \hlnum{1}\hlopt{:}\hlkwd{length}\hlstd{(allA))}
+    \hlstd{clsA} \hlkwb{<-} \hlkwd{paste}\hlstd{(clsA,allA[[i]],}\hlkwc{sep}\hlstd{=}\hlkwa{if}\hlstd{(i}\hlopt{==}\hlnum{1}\hlstd{)} \hlstr{""} \hlkwa{else} \hlstr{"-"}\hlstd{)}
+\hlstd{ccClusters} \hlkwb{<-} \hlkwd{unique}\hlstd{(lResultClusters[[}\hlnum{1}\hlstd{]])}
+\hlstd{ccClusters}
+\end{alltt}
+\begin{verbatim}
+## [1] 1 2 3 4
+\end{verbatim}
+\begin{alltt}
+\hlstd{meanCCFs} \hlkwb{<-} \hlkwd{sapply}\hlstd{(ccClusters,}
+                  \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{)}
+                      \hlkwd{mean}\hlstd{(ccfs[lResultClusters[[}\hlnum{1}\hlstd{]][clsA]}\hlopt{==}\hlstd{x]))}
+\hlcom{## print ccfs}
+\hlkwd{print}\hlstd{(meanCCFs)}
+\end{alltt}
+\begin{verbatim}
+## [1] 0.9905733 0.2453534 0.6330913 0.1211358
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+
+Let's try with K=3 clusters.
+
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{lResultClusters} \hlkwb{<-} \hlkwd{fastConsensusClustering}\hlstd{(allA,}\hlkwc{nbClusters}\hlstd{=}\hlnum{3}\hlstd{)}
+\hlcom{## final cc with K=2}
+\hlkwd{print}\hlstd{(lResultClusters)}
+\end{alltt}
+\begin{verbatim}
+## [[1]]
+## 1-1-1-1-3-4 2-2-3-2-1-2 1-1-1-1-4-4 1-2-2-1-2-3 2-2-2-1-2-3 2-2-2-2-2-3 2-3-3-3-1-1 
+##           1           2           1           3           3           3           2 
+## 1-1-1-1-2-3 1-1-1-1-3-3 2-3-3-2-1-2 
+##           1           1           2
+\end{verbatim}
+\begin{alltt}
+\hlstd{clsA} \hlkwb{<-} \hlkwa{NULL}
+\hlkwa{for}\hlstd{(i} \hlkwa{in} \hlnum{1}\hlopt{:}\hlkwd{length}\hlstd{(allA))}
+    \hlstd{clsA} \hlkwb{<-} \hlkwd{paste}\hlstd{(clsA,allA[[i]],}\hlkwc{sep}\hlstd{=}\hlkwa{if}\hlstd{(i}\hlopt{==}\hlnum{1}\hlstd{)} \hlstr{""} \hlkwa{else} \hlstr{"-"}\hlstd{)}
+\hlstd{ccClusters} \hlkwb{<-} \hlkwd{unique}\hlstd{(lResultClusters[[}\hlnum{1}\hlstd{]])}
+\hlstd{ccClusters}
+\end{alltt}
+\begin{verbatim}
+## [1] 1 2 3
+\end{verbatim}
+\begin{alltt}
+\hlstd{meanCCFs} \hlkwb{<-} \hlkwd{sapply}\hlstd{(ccClusters,}
+                  \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{)}
+                      \hlkwd{mean}\hlstd{(ccfs[lResultClusters[[}\hlnum{1}\hlstd{]][clsA]}\hlopt{==}\hlstd{x]))}
+\hlcom{## final ccfs with K=2}
+\hlkwd{print}\hlstd{(meanCCFs)}
+\end{alltt}
+\begin{verbatim}
+## [1] 0.9905733 0.2039475 0.6330913
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+To obtain the optimal number of clusters \(optK\), we derive \(consensus matrices\) for
+\(optK\in[2,max(K_{methods})]\). If a majority of methods have \(K=1\), we
+set \(optK=1\). Otherwise for each value of \(optK\), we repeat the consensus
+clustering procedure 100 times, after independent sampling with
+replacement from the methods. We then obtain one \(consensus matrix\) for
+each K value, corresponding to proportion of times the mutations were
+co-clustered. We take \(optK=\operatorname{arg\,min}_K PAC(consensus matrix(K))\) \cite{senbabaoglu_critical_2014}.\\
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{dyn.load}\hlstd{(}\hlstr{"scoringlite.so"}\hlstd{)}
+\hlstd{makeHardAss} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{v}\hlstd{)}
+\hlstd{\{}
+    \hlkwd{matrix}\hlstd{(}\hlkwd{.C}\hlstd{(}\hlstr{"hardass"}\hlstd{,}
+              \hlkwd{as.integer}\hlstd{(}\hlkwd{length}\hlstd{(v)),}
+              \hlkwd{as.integer}\hlstd{(v),}
+              \hlkwd{as.integer}\hlstd{(}\hlkwd{rep}\hlstd{(}\hlnum{0}\hlstd{,}\hlkwd{length}\hlstd{(v)}\hlopt{*}\hlkwd{length}\hlstd{(v))))[[}\hlnum{3}\hlstd{]],}
+           \hlkwd{length}\hlstd{(v),}\hlkwd{length}\hlstd{(v))}
+\hlstd{\}}
+
+\hlstd{CCM} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{ccm}\hlstd{,} \hlkwc{allCC}\hlstd{,}\hlkwc{ii}\hlstd{,}\hlkwc{jj}\hlstd{,}\hlkwc{repeats}\hlstd{,}\hlkwc{i}\hlstd{,}\hlkwc{rn}\hlstd{)}
+\hlstd{\{}
+    \hlkwa{for}\hlstd{(j} \hlkwa{in} \hlnum{1}\hlopt{:}\hlstd{repeats)}
+    \hlstd{\{}
+        \hlstd{v} \hlkwb{<-} \hlstd{allCC[[ii]][[jj]][[j]][[i]][rn]}
+        \hlstd{v[}\hlkwd{is.na}\hlstd{(v)]} \hlkwb{<-} \hlstd{(}\hlkwd{max}\hlstd{(v,}\hlkwc{na.rm}\hlstd{=T)}\hlopt{+}\hlnum{1}\hlstd{)}\hlopt{:}\hlstd{(}\hlkwd{max}\hlstd{(v,}\hlkwc{na.rm}\hlstd{=T)}\hlopt{+}\hlkwd{sum}\hlstd{(}\hlkwd{is.na}\hlstd{(v)))}
+        \hlstd{ccm} \hlkwb{<-} \hlstd{ccm}\hlopt{+}\hlkwd{makeHardAss}\hlstd{(v)}
+        \hlkwd{gc}\hlstd{()}
+    \hlstd{\}}
+    \hlstd{ccm}
+\hlstd{\}}
+
+\hlstd{chooseOptimalK} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{ccm}\hlstd{,}\hlkwc{maxK}\hlstd{)}
+\hlstd{\{}
+    \hlcom{## from Dr. Yasin Şenbabaoğlu:}
+    \hlcom{## shenbaba.weebly.com/blog/how-to-use-the-pac-measure-in-consensus-clustering}
+    \hlstd{Kvec} \hlkwb{=} \hlnum{2}\hlopt{:}\hlstd{maxK}
+    \hlstd{x1} \hlkwb{=} \hlnum{0.1}\hlstd{; x2} \hlkwb{=} \hlnum{0.9} \hlcom{## threshold defining the intermediate sub-interval}
+    \hlstd{PAC} \hlkwb{=} \hlkwd{rep}\hlstd{(}\hlnum{NA}\hlstd{,}\hlkwd{length}\hlstd{(Kvec))}
+    \hlkwd{names}\hlstd{(PAC)} \hlkwb{=} \hlkwd{paste}\hlstd{(}\hlstr{"K="}\hlstd{,Kvec,}\hlkwc{sep}\hlstd{=}\hlstr{""}\hlstd{)} \hlcom{# from 2 to maxK}
+    \hlkwa{for}\hlstd{(i} \hlkwa{in} \hlstd{Kvec)\{}
+        \hlstd{M} \hlkwb{=} \hlstd{ccm[[i]]}
+        \hlstd{Fn} \hlkwb{=} \hlkwd{ecdf}\hlstd{(M[}\hlkwd{lower.tri}\hlstd{(M)])}
+        \hlstd{PAC[i}\hlopt{-}\hlnum{1}\hlstd{]} \hlkwb{=} \hlkwd{Fn}\hlstd{(x2)} \hlopt{-} \hlkwd{Fn}\hlstd{(x1)}
+    \hlstd{\}}
+    \hlcom{## The optimal K}
+    \hlstd{optK} \hlkwb{=} \hlstd{Kvec[}\hlkwd{which.min}\hlstd{(PAC)]}
+    \hlkwd{list}\hlstd{(}\hlkwc{optK}\hlstd{=optK,}\hlkwc{PAC}\hlstd{=PAC)}
+\hlstd{\}}
+
+\hlstd{votedist.matrix.nbmut} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{allgs}\hlstd{,}\hlkwc{tA}\hlstd{)}
+\hlstd{\{}
+    \hlstd{m} \hlkwb{<-} \hlkwd{matrix}\hlstd{(}\hlnum{NA}\hlstd{,}\hlkwd{length}\hlstd{(allgs),}\hlkwd{length}\hlstd{(allgs))}
+    \hlkwa{for}\hlstd{(i} \hlkwa{in} \hlnum{1}\hlopt{:}\hlstd{(}\hlkwd{length}\hlstd{(allgs)}\hlopt{-}\hlnum{1}\hlstd{))}
+        \hlkwa{for}\hlstd{(j} \hlkwa{in} \hlstd{(i}\hlopt{+}\hlnum{1}\hlstd{)}\hlopt{:}\hlkwd{length}\hlstd{(allgs))}
+            \hlstd{m[j,i]} \hlkwb{<-} \hlstd{m[i,j]} \hlkwb{<-} \hlopt{-}\hlkwd{max}\hlstd{(tA[allgs[i]],tA[allgs[j]])}
+    \hlkwd{rownames}\hlstd{(m)} \hlkwb{<-} \hlstd{allgs}
+    \hlkwd{colnames}\hlstd{(m)} \hlkwb{<-} \hlstd{allgs}
+    \hlstd{m}
+\hlstd{\}}
+
+\hlstd{fastConsensusClustering} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{allA}\hlstd{,}
+                                    \hlkwc{nbClusters}\hlstd{,}
+                                    \hlkwc{keepnames}\hlstd{)}
+\hlstd{\{}
+    \hlstd{nMut} \hlkwb{<-} \hlkwd{length}\hlstd{(allA[[}\hlnum{1}\hlstd{]])}
+    \hlstd{nMethods} \hlkwb{<-} \hlkwd{length}\hlstd{(allA)}
+    \hlstd{matA} \hlkwb{<-} \hlkwd{t}\hlstd{(}\hlkwd{sapply}\hlstd{(allA,}\hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) x))}
+    \hlstd{clsA} \hlkwb{<-} \hlkwa{NULL}
+    \hlkwa{for}\hlstd{(i} \hlkwa{in} \hlnum{1}\hlopt{:}\hlkwd{nrow}\hlstd{(matA))}
+        \hlstd{clsA} \hlkwb{<-} \hlkwd{paste}\hlstd{(clsA,matA[i,],}\hlkwc{sep}\hlstd{=}\hlkwa{if}\hlstd{(i}\hlopt{==}\hlnum{1}\hlstd{)} \hlstr{""} \hlkwa{else} \hlstr{"-"}\hlstd{)}
+    \hlstd{vuA} \hlkwb{<-} \hlkwd{sort}\hlstd{(}\hlkwd{table}\hlstd{(clsA),}\hlkwc{decreasing}\hlstd{=T)}
+    \hlstd{dist1} \hlkwb{<-} \hlkwd{votedist.matrix}\hlstd{(}\hlkwd{names}\hlstd{(vuA),nMethods)}\hlopt{*}\hlkwd{max}\hlstd{(vuA)}\hlopt{*}\hlnum{10}
+    \hlstd{dist2} \hlkwb{<-} \hlkwd{votedist.matrix.nbmut}\hlstd{(}\hlkwd{names}\hlstd{(vuA),vuA)}
+    \hlstd{distF} \hlkwb{<-} \hlkwd{as.dist}\hlstd{(dist1}\hlopt{+}\hlstd{dist2)}
+    \hlstd{hc} \hlkwb{<-} \hlkwd{hclust}\hlstd{(distF,}\hlkwc{method}\hlstd{=}\hlstr{"ward.D"}\hlstd{)}
+    \hlstd{lClusts} \hlkwb{<-} \hlkwd{lapply}\hlstd{(nbClusters,}\hlkwa{function}\hlstd{(}\hlkwc{nC}\hlstd{)} \hlkwd{cutree}\hlstd{(hc,}\hlkwc{k}\hlstd{=nC))}
+    \hlkwd{return}\hlstd{(}\hlkwd{lapply}\hlstd{(lClusts,}\hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{)\{}
+        \hlstd{clusts} \hlkwb{<-} \hlstd{x[clsA]}
+        \hlkwd{names}\hlstd{(clusts)} \hlkwb{<-} \hlstd{keepnames}
+        \hlstd{clusts}
+    \hlstd{\}))}
+\hlstd{\}}
+
+\hlstd{consensusMatrix} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{allA}\hlstd{,}
+                            \hlkwc{pMethods}\hlstd{=}\hlkwd{c}\hlstd{(}\hlnum{0.5}\hlstd{,}\hlnum{0.75}\hlstd{,}\hlnum{0.8}\hlstd{,}\hlnum{1}\hlstd{,}\hlnum{1.1}\hlstd{,}\hlnum{1.2}\hlstd{),}
+                            \hlkwc{pFeatures}\hlstd{=}\hlkwd{c}\hlstd{(}\hlnum{0.5}\hlstd{,}\hlnum{0.75}\hlstd{,}\hlnum{0.8}\hlstd{,}\hlnum{1}\hlstd{,}\hlnum{1.1}\hlstd{,}\hlnum{1.2}\hlstd{),}
+                            \hlkwc{repeats}\hlstd{=}\hlnum{2}\hlstd{)}
+\hlstd{\{}
+    \hlstd{nbClustersMethods} \hlkwb{<-}\hlkwd{sapply}\hlstd{(allA,}\hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{)} \hlkwd{length}\hlstd{(}\hlkwd{unique}\hlstd{(x[}\hlopt{!}\hlkwd{is.na}\hlstd{(x)])))}
+    \hlkwa{if}\hlstd{(}\hlkwd{median}\hlstd{(nbClustersMethods)}\hlopt{==}\hlnum{1}\hlstd{)} \hlkwd{return}\hlstd{(}\hlnum{1}\hlstd{)}
+    \hlstd{nbClusters} \hlkwb{<-} \hlkwd{max}\hlstd{(nbClustersMethods)}
+    \hlstd{nbMethods} \hlkwb{<-} \hlkwd{length}\hlstd{(allA)}
+    \hlstd{nbFeatures} \hlkwb{<-} \hlkwd{length}\hlstd{(allA[[}\hlnum{1}\hlstd{]])}
+    \hlstd{timeCC} \hlkwb{<-} \hlkwd{system.time}\hlstd{(allCC} \hlkwb{<-} \hlkwd{lapply}\hlstd{(pMethods,}\hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{)}
+        \hlkwd{lapply}\hlstd{(pFeatures,}\hlkwa{function}\hlstd{(}\hlkwc{y}\hlstd{)}
+            \hlkwd{lapply}\hlstd{(}\hlnum{1}\hlopt{:}\hlstd{repeats,}\hlkwa{function}\hlstd{(}\hlkwc{smp}\hlstd{)}
+            \hlstd{\{}
+                \hlstd{keepMethod} \hlkwb{<-} \hlkwd{sample}\hlstd{(}\hlnum{1}\hlopt{:}\hlstd{nbMethods,}\hlkwd{round}\hlstd{(nbMethods}\hlopt{*}\hlstd{x),}\hlkwc{rep}\hlstd{=T)}
+                \hlstd{keepFeatures} \hlkwb{<-} \hlkwd{sample}\hlstd{(}\hlnum{1}\hlopt{:}\hlstd{nbFeatures,}\hlkwd{round}\hlstd{(nbFeatures}\hlopt{*}\hlstd{x),}\hlkwc{rep}\hlstd{=T)}
+                \hlstd{lAa} \hlkwb{<-} \hlkwd{lapply}\hlstd{(keepMethod,}\hlkwa{function}\hlstd{(}\hlkwc{a}\hlstd{)}
+                \hlstd{\{}
+                    \hlstd{allA[[a]][keepFeatures]}
+                \hlstd{\})}
+                \hlkwd{fastConsensusClustering}\hlstd{(lAa,}
+                                        \hlnum{1}\hlopt{:}\hlstd{nbClusters,}
+                                        \hlkwc{keepnames}\hlstd{=}\hlkwd{paste}\hlstd{(}\hlstr{"snv"}\hlstd{,}
+                                                        \hlstd{keepFeatures,}
+                                                        \hlkwc{sep}\hlstd{=}\hlstr{":"}\hlstd{))}
+            \hlstd{\}))))}
+    \hlstd{clsA} \hlkwb{<-} \hlkwd{paste}\hlstd{(}\hlstr{"snv"}\hlstd{,}\hlnum{1}\hlopt{:}\hlkwd{length}\hlstd{(allA[[}\hlnum{1}\hlstd{]]),}\hlkwc{sep}\hlstd{=}\hlstr{":"}\hlstd{)}
+    \hlstd{l} \hlkwb{<-} \hlkwd{length}\hlstd{(clsA)}
+    \hlstd{ccm} \hlkwb{<-} \hlkwd{list}\hlstd{()}
+    \hlkwa{for}\hlstd{(i} \hlkwa{in} \hlnum{2}\hlopt{:}\hlstd{nbClusters)}
+    \hlstd{\{}
+        \hlstd{ccm[[i]]} \hlkwb{<-} \hlkwd{matrix}\hlstd{(}\hlnum{0}\hlstd{,l,l)}
+        \hlkwd{rownames}\hlstd{(ccm[[i]])} \hlkwb{<-} \hlkwd{colnames}\hlstd{(ccm[[i]])} \hlkwb{<-} \hlstd{clsA}
+        \hlkwa{for}\hlstd{(ii} \hlkwa{in} \hlnum{1}\hlopt{:}\hlkwd{length}\hlstd{(pMethods))}
+        \hlstd{\{}
+            \hlkwa{for}\hlstd{(jj} \hlkwa{in} \hlnum{1}\hlopt{:}\hlkwd{length}\hlstd{(pFeatures))}
+            \hlstd{\{}
+                \hlstd{ccm[[i]]} \hlkwb{<-} \hlkwd{CCM}\hlstd{(ccm[[i]],allCC,ii,jj,repeats,i,clsA)}
+            \hlstd{\}}
+        \hlstd{\}}
+    \hlstd{\}}
+    \hlstd{K} \hlkwb{<-} \hlkwd{chooseOptimalK}\hlstd{(}\hlkwd{lapply}\hlstd{(ccm,}\hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{)}
+    \hlstd{\{}
+        \hlstd{x}\hlopt{/}\hlstd{(}\hlkwd{length}\hlstd{(pMethods)}\hlopt{*}\hlkwd{length}\hlstd{(pFeatures)}\hlopt{*}\hlstd{repeats)}
+    \hlstd{\}),}
+    \hlstd{nbClusters)}
+    \hlkwd{list}\hlstd{(}\hlkwc{K}\hlstd{=K,}\hlkwc{ccm}\hlstd{=ccm,}\hlkwc{timeCC}\hlstd{=timeCC)}
+\hlstd{\}}
+
+\hlstd{ccm} \hlkwb{<-} \hlkwd{consensusMatrix}\hlstd{(allA,}\hlkwc{pMethods}\hlstd{=}\hlnum{1}\hlstd{,}\hlkwc{pFeatures}\hlstd{=}\hlnum{1}\hlstd{,}\hlkwc{repeats}\hlstd{=}\hlnum{100}\hlstd{)}
+\hlkwd{str}\hlstd{(ccm)}
+\end{alltt}
+\begin{verbatim}
+## List of 3
+##  $ K     :List of 2
+##   ..$ optK: int 4
+##   ..$ PAC : Named num [1:3] 0.701 0.389 0.362
+##   .. ..- attr(*, "names")= chr [1:3] "K=2" "K=3" "K=4"
+##  $ ccm   :List of 4
+##   ..$ : NULL
+##   ..$ : num [1:2000, 1:2000] 100 44 38 35 46 44 38 34 41 40 ...
+##   .. ..- attr(*, "dimnames")=List of 2
+##   .. .. ..$ : chr [1:2000] "snv:1" "snv:2" "snv:3" "snv:4" ...
+##   .. .. ..$ : chr [1:2000] "snv:1" "snv:2" "snv:3" "snv:4" ...
+##   ..$ : num [1:2000, 1:2000] 100 44 38 35 46 44 38 34 41 40 ...
+##   .. ..- attr(*, "dimnames")=List of 2
+##   .. .. ..$ : chr [1:2000] "snv:1" "snv:2" "snv:3" "snv:4" ...
+##   .. .. ..$ : chr [1:2000] "snv:1" "snv:2" "snv:3" "snv:4" ...
+##   ..$ : num [1:2000, 1:2000] 100 44 38 35 46 44 38 34 41 40 ...
+##   .. ..- attr(*, "dimnames")=List of 2
+##   .. .. ..$ : chr [1:2000] "snv:1" "snv:2" "snv:3" "snv:4" ...
+##   .. .. ..$ : chr [1:2000] "snv:1" "snv:2" "snv:3" "snv:4" ...
+##  $ timeCC:Class 'proc_time'  Named num [1:5] 1.577 0.027 1.606 0 0
+##   .. ..- attr(*, "names")= chr [1:5] "user.self" "sys.self" "elapsed" "user.child" ...
+\end{verbatim}
+\begin{alltt}
+\hlstd{plotCCM} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{ccm}\hlstd{,}\hlkwc{...}\hlstd{)}
+\hlstd{\{}
+    \hlkwd{par}\hlstd{(}\hlkwc{mar}\hlstd{=}\hlkwd{c}\hlstd{(}\hlnum{0}\hlstd{,}\hlnum{0}\hlstd{,}\hlnum{3}\hlstd{,}\hlnum{0}\hlstd{))}
+    \hlkwd{plot}\hlstd{(}\hlnum{0}\hlstd{,}\hlnum{0}\hlstd{,}\hlkwc{xaxt}\hlstd{=}\hlstr{"n"}\hlstd{,}\hlkwc{yaxt}\hlstd{=}\hlstr{"n"}\hlstd{,}\hlkwc{frame}\hlstd{=F,}\hlkwc{xlab}\hlstd{=}\hlstr{""}\hlstd{,}\hlkwc{ylab}\hlstd{=}\hlstr{""}\hlstd{,}\hlkwc{col}\hlstd{=}\hlkwd{rgb}\hlstd{(}\hlnum{0}\hlstd{,}\hlnum{0}\hlstd{,}\hlnum{0}\hlstd{,}\hlnum{0}\hlstd{),}
+         \hlkwc{xlim}\hlstd{=}\hlkwd{c}\hlstd{(}\hlnum{0}\hlstd{,}\hlnum{1}\hlstd{),}\hlkwc{ylim}\hlstd{=}\hlkwd{c}\hlstd{(}\hlnum{0}\hlstd{,}\hlnum{1}\hlstd{),...)}
+    \hlkwd{rasterImage}\hlstd{(ccm}\hlopt{/}\hlnum{100}\hlstd{,}\hlnum{0}\hlstd{,}\hlnum{0}\hlstd{,}\hlnum{1}\hlstd{,}\hlnum{1}\hlstd{)}
+\hlstd{\}}
+
+\hlkwd{par}\hlstd{(}\hlkwc{mfcol}\hlstd{=}\hlkwd{c}\hlstd{(}\hlnum{2}\hlstd{,}\hlnum{2}\hlstd{))}
+\hlkwd{par}\hlstd{(}\hlkwc{mar}\hlstd{=}\hlkwd{c}\hlstd{(}\hlnum{0}\hlstd{,}\hlnum{0}\hlstd{,}\hlnum{3}\hlstd{,}\hlnum{0}\hlstd{))}
+\hlkwd{plot.new}\hlstd{()}
+\hlstd{tmp_null} \hlkwb{<-} \hlkwd{lapply}\hlstd{(}\hlnum{2}\hlopt{:}\hlnum{4}\hlstd{,}\hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{)} \hlkwd{plotCCM}\hlstd{(ccm}\hlopt{$}\hlstd{ccm[[x]],}
+                                           \hlkwc{main}\hlstd{=}\hlkwa{if}\hlstd{(x}\hlopt{==}\hlstd{ccm}\hlopt{$}\hlstd{K}\hlopt{$}\hlstd{optK)}
+                                                    \hlkwd{paste0}\hlstd{(}\hlstr{"optimal K="}\hlstd{,x,}
+                                                           \hlstr{" PAC="}\hlstd{,}\hlkwd{signif}\hlstd{(ccm}\hlopt{$}\hlstd{K}\hlopt{$}\hlstd{PAC[x}\hlopt{-}\hlnum{1}\hlstd{],}\hlnum{2}\hlstd{))}
+                                                \hlkwa{else} \hlkwd{paste0}\hlstd{(}\hlstr{"K="}\hlstd{,x,}
+                                                            \hlstr{" PAC="}\hlstd{,}\hlkwd{signif}\hlstd{(ccm}\hlopt{$}\hlstd{K}\hlopt{$}\hlstd{PAC[x}\hlopt{-}\hlnum{1}\hlstd{],}\hlnum{2}\hlstd{))))}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=1.0\linewidth]{figure/minimal-findOptimalK-1} 
+
+}
+
+
+
+\end{knitrout}
+
+For this dummy example we find that the PAC is minimal for K=4, which
+reflects in the consensus matrix (see heatmaps).
+
+Once the optimal K is defined, we can either run the
+fastConsensusClustering with K=optimalK or we can use the consensus
+matrix to cluster mutations together. We go for the latter.
+
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{findClusts} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{ccm}\hlstd{,}\hlkwc{nbClust}\hlstd{)}
+\hlstd{\{}
+    \hlstd{hc} \hlkwb{<-} \hlkwd{hclust}\hlstd{(}\hlkwd{as.dist}\hlstd{(}\hlnum{100}\hlopt{-}\hlstd{ccm),}\hlkwc{method}\hlstd{=}\hlstr{"ward.D"}\hlstd{)}
+    \hlstd{clusts} \hlkwb{<-} \hlkwd{cutree}\hlstd{(hc,}\hlkwc{k}\hlstd{=nbClust)}
+\hlstd{\}}
+\hlstd{finalClusts} \hlkwb{<-} \hlkwd{findClusts}\hlstd{(ccm}\hlopt{$}\hlstd{ccm[[ccm}\hlopt{$}\hlstd{K}\hlopt{$}\hlstd{optK]],ccm}\hlopt{$}\hlstd{K}\hlopt{$}\hlstd{optK)}
+\hlkwd{table}\hlstd{(finalClusts)}
+\end{alltt}
+\begin{verbatim}
+## finalClusts
+##   1   2   3   4 
+## 800 600 400 200
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\section*{Conclusion}
+This method takes the cluster assignments (=cluster IDs) and CCF of
+all mutations for each method and returns the consensus cluster
+assignments, the corresponding optimal number of clusters and their
+consensus CCFs.
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{sessionInfo}\hlstd{()}
+\end{alltt}
+\begin{verbatim}
+## R version 3.1.3 (2015-03-09)
+## Platform: x86_64-apple-darwin10.8.0 (64-bit)
+## Running under: OS X 10.10.5 (Yosemite)
+## 
+## locale:
+## [1] C
+## 
+## attached base packages:
+## [1] stats     graphics  grDevices utils     datasets  methods   base     
+## 
+## other attached packages:
+## [1] knitr_1.10.5
+## 
+## loaded via a namespace (and not attached):
+## [1] compiler_3.1.3 evaluate_0.7   formatR_1.2    highr_0.5      magrittr_1.5  
+## [6] stringi_0.4-1  stringr_1.0.0  tools_3.1.3
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+
+\bibliographystyle{unsrt}
+\bibliography{bibCC}
+
+
+\end{document}

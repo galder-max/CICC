@@ -1,0 +1,14 @@
+ClusterID-based consensus clustering:
+
+
+Let us have m methods M_1…m clustering v variants V_1…v.
+Each method M_i, i in {1…m}, assigns one cluster ID to each variant: A(M_i,V_j).
+For each variant V_j, j in {1…v}, we derive the vector of assignment VA_V_j=[A(M_1,V_j) A(M_2, V_j) … A(M_m, V_j)].
+Two mutations V_a and V_b sharing vector of assignments, i.e. VA_V_a=VA_V_b, have been assigned to the same cluster by all methods. And across all mutations, there will be N unique vectors of assignment UVA_1…u, shared by NM_1…u number of mutations.
+For each unique vector of assignment UVA_k, k in 1…u, we compute a distance D(k,l) to all other UVA_l, l in 1…u. That distance is defined as a the sum of two distances D(k,l)=D1(k,l)+D2(k,l).
+D1(k,l)=sum(UVA_k!=UVA_l)*max(NM_1…u)*10
+D2(k,l)=-(max(NM_k,NM_l))
+Then we perform hierarchical clustering on the distance matrix D[1…u,1…u] using Ward’s criterion and cut the tree to get a desired number of clusters of UVA. This method thus takes the final number of consensus clusters as input.
+To get cluster assignment of each individual mutation the UVA is used as mapper between cluster ID and mutations.
+The CCFs of each consensus cluster can then be calculated by summarising the CCFs of individual mutations assigned to that cluster. We take the weighted average of these CCFs with the weights of each mutation equal to its number of aligned reads.
+
