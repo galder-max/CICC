@@ -12,8 +12,6 @@ library(knitr)
 opts_chunk$set(fig.path='figure/minimal-', fig.align='center', fig.show='hold')
 options(formatR.arrow=TRUE,width=90)
 ```
-
-\maketitle
 # Description 
 
 ## Consensus cluster assignment 
