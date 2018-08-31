@@ -4,8 +4,8 @@ author:
 title: 'ClusterID-based consensus clustering'
 ---
 # CICC
-## Description
-A description of the concepts is available in the pdf and the description folder (corresponding knitr Rnw).
+## Description and example run
+A description of the concepts and example runs with dummy data is available in the pdf and the description folder (corresponding knitr Rnw).
 ## Installation 
 There is no installation required, the R scripts that can be run on their own but do have some dependencies.
 Compile the C code in the scripts directory with the following command:
